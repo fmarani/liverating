@@ -1,0 +1,24 @@
+{
+  "name": "liverating",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "exports-loader": "^0.6.2",
+    "imports-loader": "^0.6.5",
+    "react": "^0.13.3",
+    "react-tools": "^0.13.3",
+    "whatwg-fetch": "^0.10.1"
+  },
+  "devDependencies": {
+    "jsx-loader": "^0.13.2",
+    "node-libs-browser": "^0.5.2",
+    "webpack": "^1.9.10"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build-js": "node_modules/.bin/webpack --watch"
+  },
+  "author": "",
+  "license": "ISC"
+}

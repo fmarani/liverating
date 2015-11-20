@@ -8,6 +8,8 @@ import logging
 import sys
 import string
 import random
+from datetime import datetime
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 handler = logging.StreamHandler(stream=sys.stdout)
@@ -16,6 +18,7 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
+averages = []
 ratings = {}
 
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
@@ -26,10 +29,8 @@ def jsonify(data):
 
 @asyncio.coroutine
 def display(request):
-    nums = ratings.values()
-    avg = float(sum(nums))/len(nums) if len(nums) > 0 else 0.0
     return jsonify({
-        'average': avg,
+        'averages': averages,
         'ratings': ratings
         })
 
@@ -69,11 +70,26 @@ def init(loop, port):
     print("Server started at http://0.0.0.0:%s" % port)
     return srv
 
+def averager():
+    global averages
+    while True:
+        nums = ratings.values()
+        avg = float(sum(nums))/len(nums) if len(nums) > 0 else 0.0
+        now = datetime.now().strftime("%c")
+        logger.info("running averager. now=%s avg=%s", now, avg)
+        averages.append([now, avg])
+        if len(averages) > 100:
+            averages = averages[1:]
+        # every 10 seconds
+        yield from asyncio.sleep(5)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run the machinery')
     parser.add_argument('-p', '--port', type=int, help='Port number', required=True)
 
     args = parser.parse_args()
     loop = asyncio.get_event_loop()
+    asyncio.async(averager())
     loop.run_until_complete(init(loop, args.port))
     loop.run_forever()
+

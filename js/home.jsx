@@ -1,4 +1,5 @@
 var React = require("react");
+var Chart = require("react-google-charts").Chart;
 
 var RatingApp = React.createClass({
     getInitialState: function() {
@@ -14,6 +15,7 @@ var RatingApp = React.createClass({
         console.log("displayRes");
        this.setState({display_mode: true});
     },
+
     displayRate: function() {
         console.log("displayRate");
        this.setState({display_mode: false});
@@ -27,12 +29,12 @@ var RatingApp = React.createClass({
 
         return <div>
             <h1>live rating</h1>
-            <div>
-            <a onClick={this.displayRes}>Display results</a>
-            </div>
-            <div>
-            <a onClick={this.displayRate}>Rate</a>
-            </div>
+            <span style={{padding: "10px"}}>
+            <a className="btn btn-default" onClick={this.displayRes}>Display results</a>
+            </span>
+            <span style={{padding: "10px"}}>
+            <a className="btn btn-default" onClick={this.displayRate}>Rate</a>
+            </span>
             <div>
             {widget}
         </div>
@@ -43,14 +45,10 @@ var RatingApp = React.createClass({
 var Display = React.createClass({
     getInitialState: function() {
       return {
-        data: {
-            average: 0,
-            ratings: {}
-        },
+        averages: {}
       };
     },
 
-        
     getData: function() {
         var that = this;
         fetch('/display.json', {
@@ -59,8 +57,11 @@ var Display = React.createClass({
             return response.json()
           }).then(function(json) {
             console.log('parsed json', json)
-            that.setState({data: json});
-            setTimeout(that.getData, 3000);
+            var averages = json.averages.map(function(row) {
+                return [new Date(row[0]), row[1]];
+            });
+            that.setState({averages: averages});
+            that.setState({timeout_id: setTimeout(that.getData, 5000)});
           }).catch(function(ex) {
             console.log('parsing failed', ex)
           })
@@ -70,22 +71,42 @@ var Display = React.createClass({
         this.getData();
     },
 
+    componentWillUnmount: function() {
+        clearTimeout(this.state.timeout_id);
+    },
+
     render: function() {
+        var options = {
+            legend: 'none'
+        };
+        var columns = [
+            {
+                'type': 'datetime',
+                'label' : 'Time'
+            }, 
+            {
+                'type' : 'number',
+                'label' : 'Average rating'
+            }
+        ];
+
         return <div>
             <h2>display</h2>
-            <div>
-                average: {this.state.data.average}
-            </div>
-            <div>
-                ratings: {this.state.data.ratings}
-            </div>
+            <Chart chartType="LineChart" rows={this.state.averages} columns={columns} options={options} width={"100%"} height={"300px"} graph_id="linechart_graph" />
             </div>;
     }
 });
 
 var Rate = React.createClass({
+    getInitialState: function() {
+      return {
+          voted: false
+      };
+    },
+
     rate: function(num) {
         console.log(num);
+        this.setState({voted: true});
         fetch('/rate.json', {
           method: 'post',
           credentials: 'same-origin',
@@ -100,17 +121,43 @@ var Rate = React.createClass({
     },
 
     render: function() {
+        var msg = "";
+        if(this.state.voted) {
+            msg = <p>Your rating has been submitted. If you submit another, you will override the previous one.</p>
+        }
         return <div>
             <h2>rate</h2>
-            <div>
-            <a onClick={this.rate.bind(this, 1)}>1</a>
-            </div>
-            <div>
-            <a onClick={this.rate.bind(this, 2)}>2</a>
-            </div>
-            <div>
-            <a onClick={this.rate.bind(this, 3)}>3</a>
-            </div>
+            {msg}
+            <p>
+                <a className="btn btn-default" onClick={this.rate.bind(this, 1)}>1</a>
+            </p>
+            <p>
+                <a className="btn btn-default" onClick={this.rate.bind(this, 2)}>2</a>
+            </p>
+            <p>
+                <a className="btn btn-default" onClick={this.rate.bind(this, 3)}>3</a>
+            </p>
+            <p>
+                <a className="btn btn-default" onClick={this.rate.bind(this, 4)}>4</a>
+            </p>
+            <p>
+                <a className="btn btn-default" onClick={this.rate.bind(this, 5)}>5</a>
+            </p>
+            <p>
+                <a className="btn btn-default" onClick={this.rate.bind(this, 6)}>6</a>
+            </p>
+            <p>
+                <a className="btn btn-default" onClick={this.rate.bind(this, 7)}>7</a>
+            </p>
+            <p>
+                <a className="btn btn-default" onClick={this.rate.bind(this, 8)}>8</a>
+            </p>
+            <p>
+                <a className="btn btn-default" onClick={this.rate.bind(this, 9)}>9</a>
+            </p>
+            <p>
+                <a className="btn btn-default" onClick={this.rate.bind(this, 10)}>10</a>
+            </p>
             </div>;
     }
 });

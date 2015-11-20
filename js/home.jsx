@@ -77,7 +77,11 @@ var Display = React.createClass({
 
     render: function() {
         var options = {
-            legend: 'none'
+            legend: 'none',
+            vAxis: {
+                minValue: 0,
+                maxValue: 10
+            }
         };
         var columns = [
             {

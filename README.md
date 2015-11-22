@@ -10,3 +10,15 @@ deploy
 ---
 
 As it is, it can be deployed to Heroku and used straight away.
+
+
+screenshots
+---
+
+This is a rate view:
+
+![Rate view](/screenshots/rate.png "rate view")
+
+And display view:
+
+![Display](/screenshots/display.png "display view")

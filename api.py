@@ -21,22 +21,26 @@ logger.addHandler(handler)
 averages = []
 ratings = {}
 
+
+# support functions
+
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
 def jsonify(data):
     return web.Response(content_type="application/json", text=json.dumps(data))
 
-@asyncio.coroutine
-def display(request):
+
+# web handlers
+
+async def display(request):
     return jsonify({
         'averages': averages,
         'ratings': ratings
         })
 
-@asyncio.coroutine
-def rate(request):
-    data = yield from request.json()
+async def rate(request):
+    data = await request.json()
     logger.info("received rate %s", data['num'])
     try:
         ratings[request.cookies['rateapp']] = data['num']
@@ -44,8 +48,7 @@ def rate(request):
         pass
     return jsonify({'ok': True})
 
-@asyncio.coroutine
-def home(request):
+async def home(request):
     context = {}
     response = aiohttp_jinja2.render_template('home.html', request, context)
 
@@ -56,8 +59,7 @@ def home(request):
 
     return response
 
-@asyncio.coroutine
-def init(loop, port):
+async def init(loop, port):
     app = web.Application(loop=loop)
     app.router.add_route('GET', '/', home)
     app.router.add_route('GET', '/display.json', display)
@@ -66,11 +68,14 @@ def init(loop, port):
 
     aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader('templates'))
 
-    srv = yield from loop.create_server(app.make_handler(), '0.0.0.0', port)
+    srv = await loop.create_server(app.make_handler(), '0.0.0.0', port)
     print("Server started at http://0.0.0.0:%s" % port)
     return srv
 
-def averager():
+
+# periodic jobs
+
+async def averager():
     global averages
     while True:
         nums = ratings.values()
@@ -81,7 +86,8 @@ def averager():
         if len(averages) > 100:
             averages = averages[1:]
         # every 10 seconds
-        yield from asyncio.sleep(5)
+        await asyncio.sleep(5)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run the machinery')
@@ -92,4 +98,3 @@ if __name__ == "__main__":
     asyncio.async(averager())
     loop.run_until_complete(init(loop, args.port))
     loop.run_forever()
-
